@@ -2,7 +2,7 @@ import random
 import string
 import matplotlib.pyplot as plt
 
-FRASE_OBJETIVO = "INTELIGENCIA ARTICIAL"
+FRASE_OBJETIVO = "INTELIGENCIA ARTIFICIAL"
 TAMANIO_POBLACION = 150
 
 # 1% de probabilidad de mutación por caracter
@@ -153,5 +153,61 @@ def ejecutar_algoritmo_genetico():
     fig.savefig("grafico_evolucion.png", dpi=300, bbox_inches='tight')
     plt.show()
 
+# Ejecuta la lógica del algoritmo genético 'n_ejecuciones' veces sin interfaz gráfica para calcular el promedio de generaciones requeridas y otras métricas.
+def evaluar_rendimiento(n_ejecuciones):
+    print(f"Evaluando rendimiento con {n_ejecuciones} ejecuciones...")
+    generaciones_totales = []
+    
+    for ejecucion in range(n_ejecuciones):
+        longitud_objetivo = len(FRASE_OBJETIVO)
+        poblacion = [generar_individuo_aleatorio(longitud_objetivo) for _ in range(TAMANIO_POBLACION)]
+        
+        generaciones_para_objetivo = MAX_GENERACIONES
+        for generacion in range(1, MAX_GENERACIONES + 1):
+            aptitudes = [calcular_aptitud(ind, FRASE_OBJETIVO) for ind in poblacion]
+            
+            idx_mejor = max(range(len(aptitudes)), key=lambda i: aptitudes[i])
+            mejor_actual = poblacion[idx_mejor]
+            fitness_actual = aptitudes[idx_mejor]
+            
+            if fitness_actual == 1.0:
+                generaciones_para_objetivo = generacion
+                break
+                
+            nueva_poblacion = [mejor_actual]
+            
+            while len(nueva_poblacion) < TAMANIO_POBLACION:
+                padre1 = seleccion_torneo(poblacion, aptitudes)
+                padre2 = seleccion_torneo(poblacion, aptitudes)
+                
+                hijo1, hijo2 = cruzamiento(padre1, padre2)
+                
+                hijo1 = mutacion(hijo1, TASA_MUTACION)
+                hijo2 = mutacion(hijo2, TASA_MUTACION)
+                
+                nueva_poblacion.extend([hijo1, hijo2])
+                
+            poblacion = nueva_poblacion[:TAMANIO_POBLACION]
+            
+        generaciones_totales.append(generaciones_para_objetivo)
+        print(f"Ejecución {ejecucion + 1}/{n_ejecuciones}: Objetivo alcanzado en la generación {generaciones_para_objetivo}")
+
+    promedio = sum(generaciones_totales) / n_ejecuciones
+    exitos = sum(1 for g in generaciones_totales if g < MAX_GENERACIONES)
+    tasa_exito = (exitos / n_ejecuciones) * 100
+    
+    print("\n" + "=" * 60)
+    print(" RESULTADOS DEL RENDIMIENTO")
+    print("=" * 60)
+    print(f" Ejecuciones totales: {n_ejecuciones}")
+    print(f" Promedio de generaciones: {promedio:.2f}")
+    print(f" Tasa de éxito: {tasa_exito:.1f}%")
+    print(f" Mínimo de generaciones: {min(generaciones_totales)}")
+    print(f" Máximo de generaciones: {max(generaciones_totales)}")
+    print("=" * 60)
+    
+    return promedio, generaciones_totales
+
 if __name__ == "__main__":
+    evaluar_rendimiento(1000)
     ejecutar_algoritmo_genetico()
